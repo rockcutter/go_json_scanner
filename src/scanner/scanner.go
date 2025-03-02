@@ -34,7 +34,10 @@ func (s *JsonScanner) Get(key string) *JsonScanner {
 		return newInvalidJsonScanner([]byte(""))
 	}
 
-	m := payload.(map[string]interface{})
+	m, ok := payload.(map[string]interface{})
+	if !ok {
+		return newInvalidJsonScanner([]byte(""))
+	}
 	value, ok := m[key]
 	if !ok {
 		return newInvalidJsonScanner([]byte(""))

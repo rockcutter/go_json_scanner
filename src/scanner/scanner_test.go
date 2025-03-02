@@ -111,3 +111,12 @@ func TestScanner_IsInvalid(t *testing.T) {
 		})
 	}
 }
+
+func TestScanner_PanicForNonObjectJson(t *testing.T) {
+	jsonStr := []byte(`[1, 2, 3]`)
+	s := scanner.NewJsonScanner(jsonStr)
+	result := s.Get("any")
+	if !result.IsInvalid() {
+		t.Errorf("配列のみのJSONに対しては動作しない。")
+	}
+}
