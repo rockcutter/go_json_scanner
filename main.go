@@ -7,8 +7,9 @@ import (
 )
 
 func main() {
-	nest := []byte(`{"name": "John", "age": 30, "address": {"city": "New York", "zip": 10001}}`)
-	s := scanner.NewJsonScanner(nest)
-	name := s.Get("address").ToString()
-	fmt.Println(*name)
+	jsonStr := []byte(`{"name": "John", "age": 30, "address": {"city": "New York", "zip": 10001}}`)
+	s := scanner.NewJsonScanner(jsonStr)
+
+	s = s.Get("hoge").Get("city")
+	fmt.Println(s.IsInvalid())
 }

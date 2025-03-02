@@ -6,11 +6,24 @@ import (
 )
 
 type JsonScanner struct {
-	rawJson []byte
+	rawJson   []byte
+	isInvalid bool
 }
 
 func NewJsonScanner(jsonStr []byte) *JsonScanner {
-	return &JsonScanner{rawJson: jsonStr}
+	return &JsonScanner{rawJson: jsonStr, isInvalid: false}
+}
+
+func newInvalidJsonScanner(jsonStr []byte) *JsonScanner {
+	return &JsonScanner{rawJson: jsonStr, isInvalid: true}
+}
+
+func (s *JsonScanner) IsInvalid() bool {
+	return s.isInvalid
+}
+
+func (s *JsonScanner) SetInvalid() {
+	s.isInvalid = true
 }
 
 func (s *JsonScanner) Get(key string) *JsonScanner {
@@ -18,16 +31,16 @@ func (s *JsonScanner) Get(key string) *JsonScanner {
 
 	err := json.Unmarshal(s.rawJson, &payload)
 	if err != nil {
-		return nil
+		return newInvalidJsonScanner([]byte(""))
 	}
 
 	m := payload.(map[string]interface{})
 	value, ok := m[key]
 	if !ok {
-		return nil
+		return newInvalidJsonScanner([]byte(""))
 	}
 
-	rs := &JsonScanner{[]byte(fmt.Sprintf("%v", value))}
+	rs := NewJsonScanner([]byte(fmt.Sprintf("%v", value)))
 
 	// json.Unmarshal を調整するよりもここで分岐するほうが楽
 	// 必要になったら調整する
@@ -35,15 +48,15 @@ func (s *JsonScanner) Get(key string) *JsonScanner {
 	case map[string]interface{}:
 		b, err := json.Marshal(vt)
 		if err != nil {
-			return nil
+			return newInvalidJsonScanner([]byte(""))
 		}
-		rs = &JsonScanner{[]byte(b)}
+		rs = NewJsonScanner(b)
 	case string:
-		rs = &JsonScanner{[]byte(vt)}
+		rs = NewJsonScanner([]byte(vt))
 	case float64:
-		rs = &JsonScanner{[]byte(fmt.Sprintf("%f", vt))}
+		rs = NewJsonScanner([]byte(fmt.Sprintf("%f", vt)))
 	default:
-		rs = &JsonScanner{[]byte("Unsupported type")}
+		rs = NewJsonScanner([]byte(""))
 	}
 
 	return rs

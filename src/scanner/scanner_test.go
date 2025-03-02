@@ -58,3 +58,56 @@ func TestScanner_Get(t *testing.T) {
 		})
 	}
 }
+
+func TestScanner_IsInvalid(t *testing.T) {
+	testCase := []struct {
+		name    string
+		jsonStr []byte
+		keys    []string
+		want    bool
+	}{
+		{
+			name:    "valid",
+			jsonStr: []byte(`{"name": "John", "age": 30}`),
+			keys:    []string{"name"},
+			want:    false,
+		},
+		{
+			name:    "invalid_key",
+			jsonStr: []byte(`{"name": "John", "age": 30}`),
+			keys:    []string{"this_field_is_not_exist"},
+			want:    true,
+		},
+		{
+			name:    "invalid_json_format",
+			jsonStr: []byte(`{"name": "John",hoge=hoge "age": 30, "address": {"city": "New York", "zip": 10001}}`),
+			keys:    []string{"name"},
+			want:    true,
+		},
+		{
+			name:    "invalid_key_nested_json",
+			jsonStr: []byte(`{"name": "John", "age": 30, "address": {"city": "New York", "zip": 10001}}`),
+			keys:    []string{"address", "this_field_is_not_exist"},
+			want:    true,
+		},
+		{
+			name:    "invalid_first_key_nested_json",
+			jsonStr: []byte(`{"name": "John", "age": 30, "address": {"city": "New York", "zip": 10001}}`),
+			keys:    []string{"this_field_is_not_exist", "city"},
+			want:    true,
+		},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			s := scanner.NewJsonScanner(tc.jsonStr)
+			for _, key := range tc.keys {
+				s = s.Get(key)
+			}
+			got := s.IsInvalid()
+			if got != tc.want {
+				t.Errorf("got: %v, want: %v", got, tc.want)
+			}
+		})
+	}
+}
